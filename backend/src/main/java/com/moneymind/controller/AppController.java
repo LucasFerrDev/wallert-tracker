@@ -50,13 +50,32 @@ public class AppController {
         return transactionRepository.save(transaction);
     }
 
+    @PutMapping("/transactions/{id}")
+    public ResponseEntity<?> updateTransaction(@PathVariable Long id, @RequestBody Transaction updatedTransaction, Authentication authentication) {
+        User user = getAuthenticatedUser(authentication);
+        Optional<Transaction> existingOpt = transactionRepository.findByIdAndUser(id, user);
+        if (existingOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Transação não encontrada.");
+        }
+        Transaction existing = existingOpt.get();
+
+        existing.setDescription(updatedTransaction.getDescription());
+        existing.setAmount(updatedTransaction.getAmount());
+        existing.setDate(updatedTransaction.getDate());
+        existing.setType(updatedTransaction.getType());
+        existing.setCategory(updatedTransaction.getCategory());
+
+        return ResponseEntity.ok(transactionRepository.save(existing));
+    }
+
     @DeleteMapping("/transactions/{id}")
     public ResponseEntity<?> deleteTransaction(@PathVariable Long id, Authentication authentication) {
         User user = getAuthenticatedUser(authentication);
-        Transaction tx = transactionRepository.findById(id).orElseThrow();
-        if (!tx.getUser().getId().equals(user.getId())) {
-            return ResponseEntity.status(403).body("Acesso negado.");
+        Optional<Transaction> txOpt = transactionRepository.findByIdAndUser(id, user);
+        if (txOpt.isEmpty()) {
+            return ResponseEntity.status(404).body("Transação não encontrada.");
         }
+        Transaction tx = txOpt.get();
         transactionRepository.delete(tx);
         return ResponseEntity.ok("Transação removida.");
     }

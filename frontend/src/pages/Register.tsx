@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { Link, useNavigate } from 'react-router-dom';
 import { Wallet } from 'lucide-react';
+import api from '../services/api';
 
 const Register = () => {
   const [name, setName] = useState('');
@@ -27,7 +27,7 @@ const Register = () => {
     }
 
     try {
-      await axios.post('http://localhost:8080/api/auth/register', { name, email, password });
+      await api.post('/api/auth/register', { name, email, password });
       setSuccess('Conta criada com sucesso! Redirecionando para o login...');
       setTimeout(() => navigate('/login'), 2000);
     } catch (err: any) {

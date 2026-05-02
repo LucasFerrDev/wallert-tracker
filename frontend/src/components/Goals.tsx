@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { Target } from 'lucide-react';
 import CurrencyInput from './CurrencyInput';
+import api from '../services/api';
 
 interface Goal {
   id?: number;
@@ -14,6 +14,7 @@ interface Goal {
 const Goals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   // Form State
   const [name, setName] = useState('');
@@ -27,13 +28,15 @@ const Goals = () => {
 
   const fetchGoals = () => {
     setLoading(true);
-    axios.get('http://localhost:8080/api/goals')
+    api.get('/api/goals')
       .then(res => {
         setGoals(res.data);
+        setError('');
         setLoading(false);
       })
       .catch(err => {
         console.error('Error fetching goals:', err);
+        setError('Não foi possível carregar suas metas.');
         setLoading(false);
       });
   };
@@ -47,16 +50,18 @@ const Goals = () => {
       deadline
     };
 
-    axios.post('http://localhost:8080/api/goals', newGoal)
+    api.post('/api/goals', newGoal)
       .then(() => {
         fetchGoals();
         setName('');
         setTargetAmount(0);
         setCurrentAmount(0);
         setDeadline('');
+        setError('');
       })
       .catch(err => {
         console.error('Error adding goal:', err);
+        setError('Não foi possível salvar a meta. Verifique sua sessão e tente novamente.');
       });
   };
 
@@ -65,6 +70,11 @@ const Goals = () => {
   return (
     <div className="animate-fade-in">
       <h1>Metas Financeiras</h1>
+      {error && (
+        <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+          {error}
+        </div>
+      )}
 
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
         {goals.map(goal => {

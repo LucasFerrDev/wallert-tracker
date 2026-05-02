@@ -9,6 +9,7 @@ import org.springframework.stereotype.Repository;
 import com.moneymind.model.User;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface TransactionRepository extends JpaRepository<Transaction, Long> {
@@ -21,4 +22,6 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Object[]> sumAmountByCategoryAndDateBetween(User user, LocalDate startDate, LocalDate endDate);
     
     List<Transaction> findByUser(User user);
+
+    Optional<Transaction> findByIdAndUser(Long id, User user);
 }

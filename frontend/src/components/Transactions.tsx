@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import CurrencyInput from './CurrencyInput';
+import api from '../services/api';
 
 interface Transaction {
   id?: number;
@@ -14,6 +14,8 @@ interface Transaction {
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
   
   // Form state
   const [description, setDescription] = useState('');
@@ -28,20 +30,31 @@ const Transactions = () => {
 
   const fetchTransactions = () => {
     setLoading(true);
-    axios.get('http://localhost:8080/api/transactions')
+    api.get('/api/transactions')
       .then(res => {
         setTransactions(res.data);
+        setError('');
         setLoading(false);
       })
       .catch(err => {
         console.error('Error fetching transactions:', err);
+        setError('Não foi possível carregar suas transações.');
         setLoading(false);
       });
   };
 
-  const handleAddTransaction = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setDescription('');
+    setAmount(0);
+    setType('EXPENSE');
+    setCategory('');
+    setDate(new Date().toISOString().split('T')[0]);
+    setEditingId(null);
+  };
+
+  const handleSubmitTransaction = (e: React.FormEvent) => {
     e.preventDefault();
-    const newTx: Transaction = {
+    const payload: Transaction = {
       description,
       amount,
       type,
@@ -49,20 +62,56 @@ const Transactions = () => {
       date
     };
 
-    axios.post('http://localhost:8080/api/transactions', newTx)
+    const request = editingId
+      ? api.put(`/api/transactions/${editingId}`, payload)
+      : api.post('/api/transactions', payload);
+
+    request
       .then(() => {
         fetchTransactions();
-        setDescription('');
-        setAmount(0);
-        setCategory('');
+        resetForm();
+        setError('');
       })
       .catch(err => {
-        console.error("Error adding transaction", err);
-        // Mock add
-        setTransactions(prev => [...prev, { ...newTx, id: Math.random() }]);
-        setDescription('');
-        setAmount(0);
-        setCategory('');
+        console.error('Error saving transaction', err);
+        setError('Não foi possível salvar a transação. Verifique sua sessão e tente novamente.');
+      });
+  };
+
+  const handleEditTransaction = (tx: Transaction) => {
+    if (!tx.id) {
+      setError('Não foi possível editar essa transação.');
+      return;
+    }
+    setDescription(tx.description);
+    setAmount(tx.amount);
+    setType(tx.type);
+    setCategory(tx.category);
+    setDate(tx.date);
+    setEditingId(tx.id);
+    setError('');
+  };
+
+  const handleDeleteTransaction = (id?: number) => {
+    if (!id) {
+      setError('Não foi possível excluir essa transação.');
+      return;
+    }
+    if (!window.confirm('Deseja realmente excluir esta transação?')) {
+      return;
+    }
+
+    api.delete(`/api/transactions/${id}`)
+      .then(() => {
+        if (editingId === id) {
+          resetForm();
+        }
+        fetchTransactions();
+        setError('');
+      })
+      .catch(err => {
+        console.error('Error deleting transaction', err);
+        setError('Não foi possível excluir a transação.');
       });
   };
 
@@ -71,10 +120,15 @@ const Transactions = () => {
   return (
     <div className="animate-fade-in">
       <h1>Transações</h1>
+      {error && (
+        <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid var(--danger-color)', padding: '0.75rem', borderRadius: '8px', marginBottom: '1.25rem', fontSize: '0.875rem' }}>
+          {error}
+        </div>
+      )}
       
       <div className="glass" style={{ padding: '2rem', marginBottom: '2rem' }}>
-        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>Nova Transação</h2>
-        <form onSubmit={handleAddTransaction} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
+        <h2 style={{ fontSize: '1.25rem', marginBottom: '1.5rem' }}>{editingId ? 'Editar Transação' : 'Nova Transação'}</h2>
+        <form onSubmit={handleSubmitTransaction} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem' }}>
           <div>
             <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem', color: 'var(--text-secondary)' }}>Descrição</label>
             <input 
@@ -128,8 +182,28 @@ const Transactions = () => {
               style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid rgba(255,255,255,0.1)', background: 'rgba(0,0,0,0.2)', color: 'white' }}
             />
           </div>
-          <div style={{ display: 'flex', alignItems: 'flex-end' }}>
-            <button type="submit" className="btn" style={{ width: '100%' }}>Adicionar</button>
+          <div style={{ display: 'flex', alignItems: 'flex-end', gap: '0.75rem' }}>
+            <button type="submit" className="btn" style={{ width: '100%' }}>
+              {editingId ? 'Salvar' : 'Adicionar'}
+            </button>
+            {editingId && (
+              <button
+                type="button"
+                onClick={resetForm}
+                style={{
+                  width: '100%',
+                  background: 'rgba(255,255,255,0.08)',
+                  color: 'var(--text-secondary)',
+                  border: '1px solid rgba(255,255,255,0.12)',
+                  padding: '0.75rem 1.5rem',
+                  borderRadius: '8px',
+                  fontWeight: 500,
+                  cursor: 'pointer'
+                }}
+              >
+                Cancelar
+              </button>
+            )}
           </div>
         </form>
       </div>
@@ -146,11 +220,12 @@ const Transactions = () => {
                 <th style={{ padding: '1rem' }}>Descrição</th>
                 <th style={{ padding: '1rem' }}>Categoria</th>
                 <th style={{ padding: '1rem', textAlign: 'right' }}>Valor</th>
+                <th style={{ padding: '1rem', textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
             <tbody>
-              {transactions.map((tx, idx) => (
-                <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
+              {transactions.map((tx) => (
+                <tr key={tx.id ?? `${tx.description}-${tx.date}-${tx.amount}`} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                   <td style={{ padding: '1rem' }}>{new Date(tx.date).toLocaleDateString('pt-BR')}</td>
                   <td style={{ padding: '1rem' }}>{tx.description}</td>
                   <td style={{ padding: '1rem' }}>
@@ -160,6 +235,38 @@ const Transactions = () => {
                   </td>
                   <td style={{ padding: '1rem', textAlign: 'right', color: tx.type === 'INCOME' ? 'var(--success-color)' : 'white' }}>
                     {tx.type === 'INCOME' ? '+' : '-'} {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(tx.amount)}
+                  </td>
+                  <td style={{ padding: '1rem', textAlign: 'right' }}>
+                    <div style={{ display: 'inline-flex', gap: '0.5rem' }}>
+                      <button
+                        type="button"
+                        onClick={() => handleEditTransaction(tx)}
+                        style={{
+                          background: 'rgba(59,130,246,0.2)',
+                          color: 'var(--accent-color)',
+                          border: '1px solid rgba(59,130,246,0.4)',
+                          borderRadius: '8px',
+                          padding: '0.4rem 0.7rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Editar
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteTransaction(tx.id)}
+                        style={{
+                          background: 'rgba(239,68,68,0.2)',
+                          color: 'var(--danger-color)',
+                          border: '1px solid rgba(239,68,68,0.4)',
+                          borderRadius: '8px',
+                          padding: '0.4rem 0.7rem',
+                          cursor: 'pointer'
+                        }}
+                      >
+                        Excluir
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}

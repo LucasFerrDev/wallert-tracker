@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import { Wallet } from 'lucide-react';
+import api from '../services/api';
 
 const Login = () => {
   const [email, setEmail] = useState('');
@@ -15,7 +15,7 @@ const Login = () => {
     e.preventDefault();
     setError('');
     try {
-      const response = await axios.post('http://localhost:8080/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { email, password });
       const { token, isConfigured } = response.data;
       login(token, isConfigured);
       // Navigate based on configuration status

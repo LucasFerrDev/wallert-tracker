@@ -1,9 +1,9 @@
-import React, { useEffect, useState } from 'react';
-import axios from 'axios';
+import { useEffect, useState } from 'react';
 import { Bell, TrendingUp, Wallet, ArrowDown } from 'lucide-react';
 import {
   ResponsiveContainer, AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ReferenceLine
 } from 'recharts';
+import api from '../services/api';
 
 interface DashboardSummary {
   forecast: number;
@@ -32,12 +32,18 @@ const CustomTooltip = ({ active, payload, label }: any) => {
 const Dashboard = () => {
   const [summary, setSummary] = useState<DashboardSummary | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    axios.get('http://localhost:8080/api/dashboard/summary')
-      .then(r => { setSummary(r.data); setLoading(false); })
+    api.get('/api/dashboard/summary')
+      .then(r => {
+        setSummary(r.data);
+        setError('');
+        setLoading(false);
+      })
       .catch(err => {
         console.error('Dashboard fetch error:', err);
+        setError('Não foi possível carregar o dashboard. Faça login novamente e tente atualizar a página.');
         setLoading(false);
       });
   }, []);
@@ -50,6 +56,10 @@ const Dashboard = () => {
         Carregando seus dados financeiros...
       </div>
     );
+  }
+
+  if (error) {
+    return <div className="animate-fade-in" style={{ color: 'var(--danger-color)' }}>{error}</div>;
   }
 
   return (

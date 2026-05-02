@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { CheckCircle, Plus, X, Wallet, ChevronRight, ArrowLeft, Loader } from 'lucide-react';
 import CurrencyInput from '../components/CurrencyInput';
+import api from '../services/api';
 
 const Settings = () => {
   const { setConfigured } = useAuth();
@@ -25,7 +25,7 @@ const Settings = () => {
 
   // ─── Load existing user data on mount ───────────────────────────
   useEffect(() => {
-    axios.get('http://localhost:8080/api/auth/me')
+    api.get('/api/auth/me')
       .then(res => {
         const data = res.data;
         setSalary(Number(data.salary) || 0);
@@ -70,7 +70,7 @@ const Settings = () => {
 
     setSaving(true);
     try {
-      await axios.put('http://localhost:8080/api/auth/configure', {
+      await api.put('/api/auth/configure', {
         salary,
         initialBalance,
         extraCategories,
