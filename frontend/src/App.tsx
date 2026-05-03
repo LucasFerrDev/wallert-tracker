@@ -8,6 +8,7 @@ import Goals from './components/Goals';
 import Login from './pages/Login';
 import Register from './pages/Register';
 import Settings from './pages/Settings';
+import EditProfileModal from './components/EditProfileModal';
 
 // ─── Guest Route (redirect if already authenticated) ────────────────
 const GuestRoute = ({ children }: { children: React.ReactNode }) => {
@@ -42,11 +43,21 @@ const SettingsRoute = () => {
 };
 
 // ─── Sidebar nav item ────────────────────────────────────────────────
-const NavItem = ({ to, icon, label }: { to: string; icon: React.ReactNode; label: string }) => {
+const NavItem = ({
+  to,
+  icon,
+  label,
+  onClick,
+}: {
+  to: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}) => {
   const location = useLocation();
   const isActive = location.pathname === to;
   return (
-    <Link to={to} className={`nav-item${isActive ? ' active' : ''}`}>
+    <Link to={to} onClick={onClick} className={`nav-item${isActive ? ' active' : ''}`}>
       {icon}
       {label}
     </Link>
@@ -100,14 +111,21 @@ const LogoIcon = () => (
 
 // ─── App Layout (sidebar + content) ─────────────────────────────────
 const AppLayout = ({ children }: { children: React.ReactNode }) => {
+  const location = useLocation();
   const { logout } = useAuth();
   const [initials, setInitials] = useState('MM');
   const [displayName, setDisplayName] = useState('Usuário');
+  const [userEmail, setUserEmail] = useState('');
+  const [userName, setUserName] = useState('');
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
-  useEffect(() => {
+  const loadUserData = () => {
     api.get('/api/auth/me').then(res => {
       const data = res.data;
       const name: string = data.name || data.email || '';
+      setUserName(name);
+      setUserEmail(data.email || '');
       const parts = name.trim().split(' ');
       if (parts.length >= 2) {
         setInitials((parts[0][0] + parts[parts.length - 1][0]).toUpperCase());
@@ -117,10 +135,95 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         setDisplayName(name.split('@')[0]);
       }
     }).catch(() => {});
+  };
+
+  useEffect(() => {
+    loadUserData();
   }, []);
+
+  useEffect(() => {
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
+
+  const handleEditClick = () => {
+    setIsEditModalOpen(true);
+  };
+
+  const handleModalClose = () => {
+    setIsEditModalOpen(false);
+  };
+
+  const handleProfileUpdated = () => {
+    loadUserData();
+  };
 
   return (
     <div className="app-container">
+      <header className="mobile-topbar">
+        <div className="mobile-topbar-brand">
+          <div className="sidebar-logo-icon">
+            <LogoIcon />
+          </div>
+          <span className="sidebar-logo-name">Money Mind</span>
+        </div>
+        <button
+          type="button"
+          className="mobile-menu-trigger"
+          onClick={() => setIsMobileMenuOpen(prev => !prev)}
+          aria-label="Abrir menu"
+          aria-expanded={isMobileMenuOpen}
+        >
+          <svg viewBox="0 0 16 16" fill="none">
+            <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+          </svg>
+        </button>
+      </header>
+
+      {isMobileMenuOpen && (
+        <>
+          <button
+            type="button"
+            className="mobile-menu-backdrop"
+            onClick={() => setIsMobileMenuOpen(false)}
+            aria-label="Fechar menu"
+          />
+          <div className="mobile-menu-dropdown">
+            <nav className="mobile-menu-nav">
+              <div className="nav-section-label">Principal</div>
+              <NavItem to="/" icon={<IconDashboard />} label="Visão geral" onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem to="/transacoes" icon={<IconTransactions />} label="Transações" onClick={() => setIsMobileMenuOpen(false)} />
+              <NavItem to="/metas" icon={<IconGoals />} label="Metas" onClick={() => setIsMobileMenuOpen(false)} />
+
+              <div className="nav-section-label" style={{ marginTop: '8px' }}>Configurações</div>
+              <NavItem to="/settings" icon={<IconSettings />} label="Configurações" onClick={() => setIsMobileMenuOpen(false)} />
+              <button
+                onClick={logout}
+                className="nav-item nav-item-danger"
+                style={{ background: 'none', border: 'none', width: '100%', textAlign: 'left' }}
+              >
+                <IconLogout />
+                Sair
+              </button>
+            </nav>
+
+            <button
+              type="button"
+              className="mobile-menu-user"
+              onClick={() => {
+                setIsMobileMenuOpen(false);
+                handleEditClick();
+              }}
+            >
+              <div className="sidebar-user-avatar">{initials}</div>
+              <div style={{ overflow: 'hidden', textAlign: 'left' }}>
+                <div className="sidebar-user-name">{displayName}</div>
+                <div className="sidebar-user-plan">{userEmail}</div>
+              </div>
+            </button>
+          </div>
+        </>
+      )}
+
       <aside className="sidebar">
         {/* Logo */}
         <div className="sidebar-logo">
@@ -143,8 +246,8 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <NavItem to="/settings" icon={<IconSettings />} label="Configurações" />
           <button
             onClick={logout}
-            className="nav-item"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left', color: '#dc2626' }}
+            className="nav-item nav-item-danger"
+            style={{ background: 'none', border: 'none', cursor: 'pointer', width: '100%', textAlign: 'left' }}
           >
             <IconLogout />
             Sair
@@ -152,7 +255,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
         </nav>
 
         {/* User card */}
-        <div className="sidebar-user">
+        <div className="sidebar-user" onClick={handleEditClick} style={{ cursor: 'pointer' }}>
           <div className="sidebar-user-avatar">{initials}</div>
           <div style={{ overflow: 'hidden' }}>
             <div className="sidebar-user-name">{displayName}</div>
@@ -163,6 +266,14 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
       <main className="main-content animate-fade-in">
         {children}
       </main>
+
+      <EditProfileModal
+        isOpen={isEditModalOpen}
+        onClose={handleModalClose}
+        userName={userName}
+        userEmail={userEmail}
+        onProfileUpdated={handleProfileUpdated}
+      />
     </div>
   );
 };

@@ -11,6 +11,9 @@ interface Transaction {
   category: string;
 }
 
+type StatusFilter = 'ALL' | 'INCOME' | 'EXPENSE';
+type AmountFilter = 'ALL' | 'GREATER' | 'LESS';
+
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
@@ -23,6 +26,13 @@ const Transactions = () => {
   const [type, setType] = useState<'INCOME' | 'EXPENSE'>('EXPENSE');
   const [category, setCategory] = useState('');
   const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
+
+  // Filter state
+  const [searchName, setSearchName] = useState('');
+  const [searchCategory, setSearchCategory] = useState('');
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
+  const [amountFilter, setAmountFilter] = useState<AmountFilter>('ALL');
+  const [amountValue, setAmountValue] = useState('');
 
   useEffect(() => { fetchTransactions(); }, []);
 
@@ -65,6 +75,43 @@ const Transactions = () => {
 
   const fmt = (v: number) =>
     new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL' }).format(v);
+
+  const normalizedName = searchName.trim().toLowerCase();
+  const normalizedCategory = searchCategory.trim().toLowerCase();
+  const parsedAmountValue = amountValue.trim() === '' ? NaN : Number(amountValue);
+  const shouldFilterAmount = amountFilter !== 'ALL' && !Number.isNaN(parsedAmountValue);
+
+  const filteredTransactions = transactions.filter(tx => {
+    const matchesName = normalizedName === ''
+      || tx.description.toLowerCase().includes(normalizedName);
+    const matchesCategory = normalizedCategory === ''
+      || tx.category.toLowerCase().includes(normalizedCategory);
+    const matchesStatus = statusFilter === 'ALL' || tx.type === statusFilter;
+
+    let matchesAmount = true;
+    if (shouldFilterAmount) {
+      if (amountFilter === 'GREATER') {
+        matchesAmount = tx.amount > parsedAmountValue;
+      } else if (amountFilter === 'LESS') {
+        matchesAmount = tx.amount < parsedAmountValue;
+      }
+    }
+
+    return matchesName && matchesCategory && matchesStatus && matchesAmount;
+  });
+
+  const hasActiveFilters = normalizedName !== ''
+    || normalizedCategory !== ''
+    || statusFilter !== 'ALL'
+    || (amountFilter !== 'ALL' && amountValue.trim() !== '');
+
+  const clearFilters = () => {
+    setSearchName('');
+    setSearchCategory('');
+    setStatusFilter('ALL');
+    setAmountFilter('ALL');
+    setAmountValue('');
+  };
 
   if (loading) return (
     <div className="loading-center">
@@ -150,17 +197,90 @@ const Transactions = () => {
 
       {/* Transactions table */}
       <div className="panel">
+        <div className="transactions-filters">
+          <div className="transactions-filters-grid">
+            <div className="form-group">
+              <label className="form-label">Buscar por nome</label>
+              <input
+                type="text"
+                value={searchName}
+                onChange={e => setSearchName(e.target.value)}
+                placeholder="Ex: Supermercado"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Buscar por categoria</label>
+              <input
+                type="text"
+                value={searchCategory}
+                onChange={e => setSearchCategory(e.target.value)}
+                placeholder="Ex: Alimentação"
+              />
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Status</label>
+              <select value={statusFilter} onChange={e => setStatusFilter(e.target.value as StatusFilter)}>
+                <option value="ALL">Todos</option>
+                <option value="INCOME">Receita</option>
+                <option value="EXPENSE">Despesa</option>
+              </select>
+            </div>
+
+            <div className="form-group">
+              <label className="form-label">Valor</label>
+              <div className="transactions-value-filter">
+                <select
+                  value={amountFilter}
+                  onChange={e => setAmountFilter(e.target.value as AmountFilter)}
+                >
+                  <option value="ALL">Sem filtro</option>
+                  <option value="GREATER">Maior que</option>
+                  <option value="LESS">Menor que</option>
+                </select>
+                <input
+                  type="number"
+                  min="0"
+                  step="0.01"
+                  value={amountValue}
+                  onChange={e => setAmountValue(e.target.value)}
+                  placeholder="0,00"
+                  disabled={amountFilter === 'ALL'}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="transactions-filters-actions">
+            <button
+              type="button"
+              className="btn-ghost"
+              onClick={clearFilters}
+              disabled={!hasActiveFilters}
+            >
+              Limpar filtros
+            </button>
+          </div>
+        </div>
+
         <div className="panel-header">
           <span className="panel-title">Histórico</span>
-          <span style={{ fontSize: 12, color: '#999' }}>{transactions.length} transações</span>
+          <span style={{ fontSize: 12, color: '#999' }}>
+            {filteredTransactions.length} de {transactions.length} transações
+          </span>
         </div>
 
         {transactions.length === 0 ? (
           <p style={{ fontSize: 13, color: '#bbb', textAlign: 'center', padding: '2rem 0' }}>
             Nenhuma transação registrada. Adicione sua primeira transação acima!
           </p>
+        ) : filteredTransactions.length === 0 ? (
+          <p style={{ fontSize: 13, color: '#bbb', textAlign: 'center', padding: '2rem 0' }}>
+            Nenhuma transação encontrada com os filtros informados.
+          </p>
         ) : (
-          <table className="tx-table">
+          <table className="tx-table tx-table-history">
             <thead>
               <tr>
                 <th>Data</th>
@@ -171,27 +291,27 @@ const Transactions = () => {
                 <th style={{ textAlign: 'right' }}>Ações</th>
               </tr>
             </thead>
-            <tbody>
-              {transactions.map(tx => (
+              <tbody>
+              {filteredTransactions.map(tx => (
                 <tr key={tx.id ?? `${tx.description}-${tx.date}-${tx.amount}`}>
-                  <td>{new Date(tx.date).toLocaleDateString('pt-BR')}</td>
-                  <td>
+                  <td data-label="Data">{new Date(tx.date).toLocaleDateString('pt-BR')}</td>
+                  <td data-label="Descrição">
                     <div className="tx-name">{tx.description}</div>
                   </td>
-                  <td>
+                  <td data-label="Categoria">
                     <span className="badge badge-orange">{tx.category}</span>
                   </td>
-                  <td>
+                  <td data-label="Status">
                     <span className={`badge ${tx.type === 'INCOME' ? 'badge-green' : 'badge-red'}`}>
                       {tx.type === 'INCOME' ? 'Receita' : 'Despesa'}
                     </span>
                   </td>
-                  <td style={{ textAlign: 'right' }}
+                  <td data-label="Valor" style={{ textAlign: 'right' }}
                     className={tx.type === 'INCOME' ? 'tx-amount-income' : 'tx-amount-expense'}>
                     {tx.type === 'INCOME' ? '+' : '−'}{fmt(tx.amount)}
                   </td>
-                  <td style={{ textAlign: 'right' }}>
-                    <div style={{ display: 'inline-flex', gap: 6 }}>
+                  <td data-label="Ações" style={{ textAlign: 'right' }}>
+                    <div className="tx-actions">
                       <button className="btn-edit" onClick={() => handleEditTransaction(tx)}>Editar</button>
                       <button className="btn-danger" onClick={() => handleDeleteTransaction(tx.id)}>Excluir</button>
                     </div>
