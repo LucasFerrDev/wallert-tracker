@@ -510,6 +510,48 @@ body {
   justify-content: flex-end;
 }
 
+.transactions-pagination {
+  margin-top: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+}
+
+.pagination-arrow {
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  border: none;
+  background: var(--accent);
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.pagination-arrow:hover:not(:disabled) {
+  background: var(--accent-hover);
+  transform: translateY(-1px);
+}
+
+.pagination-arrow.disabled,
+.pagination-arrow:disabled {
+  background: #d1d5db;
+  color: #ffffff;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.pagination-info {
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
 /* ── Form Inputs ────────────────────────────────────────── */
 .form-group {
   display: flex;

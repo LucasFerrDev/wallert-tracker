@@ -11,14 +11,30 @@ interface Transaction {
   category: string;
 }
 
+interface PagedTransactionsResponse {
+  content: Transaction[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+  hasPrevious: boolean;
+}
+
 type StatusFilter = 'ALL' | 'INCOME' | 'EXPENSE';
 type AmountFilter = 'ALL' | 'GREATER' | 'LESS';
+const PAGE_SIZE = 25;
 
 const Transactions = () => {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const [currentPage, setCurrentPage] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [totalElements, setTotalElements] = useState(0);
+  const [hasNextPage, setHasNextPage] = useState(false);
+  const [hasPreviousPage, setHasPreviousPage] = useState(false);
 
   // Form state
   const [description, setDescription] = useState('');
@@ -34,12 +50,23 @@ const Transactions = () => {
   const [amountFilter, setAmountFilter] = useState<AmountFilter>('ALL');
   const [amountValue, setAmountValue] = useState('');
 
-  useEffect(() => { fetchTransactions(); }, []);
+  useEffect(() => { fetchTransactions(0); }, []);
 
-  const fetchTransactions = () => {
+  const fetchTransactions = (page = 0) => {
     setLoading(true);
-    api.get('/api/transactions')
-      .then(res => { setTransactions(res.data); setError(''); setLoading(false); })
+    api.get<PagedTransactionsResponse>('/api/transactions/paged', {
+      params: { page, size: PAGE_SIZE },
+    })
+      .then(res => {
+        setTransactions(res.data.content);
+        setCurrentPage(res.data.page);
+        setTotalPages(res.data.totalPages);
+        setTotalElements(res.data.totalElements);
+        setHasNextPage(res.data.hasNext);
+        setHasPreviousPage(res.data.hasPrevious);
+        setError('');
+        setLoading(false);
+      })
       .catch(() => { setError('Não foi possível carregar suas transações.'); setLoading(false); });
   };
 
@@ -55,7 +82,7 @@ const Transactions = () => {
       ? api.put(`/api/transactions/${editingId}`, payload)
       : api.post('/api/transactions', payload);
     request
-      .then(() => { fetchTransactions(); resetForm(); setError(''); })
+      .then(() => { fetchTransactions(currentPage); resetForm(); setError(''); })
       .catch(() => setError('Não foi possível salvar a transação.'));
   };
 
@@ -69,7 +96,12 @@ const Transactions = () => {
     if (!id) { setError('Não foi possível excluir essa transação.'); return; }
     if (!window.confirm('Deseja realmente excluir esta transação?')) return;
     api.delete(`/api/transactions/${id}`)
-      .then(() => { if (editingId === id) resetForm(); fetchTransactions(); setError(''); })
+      .then(() => {
+        if (editingId === id) resetForm();
+        const targetPage = transactions.length === 1 && currentPage > 0 ? currentPage - 1 : currentPage;
+        fetchTransactions(targetPage);
+        setError('');
+      })
       .catch(() => setError('Não foi possível excluir a transação.'));
   };
 
@@ -111,6 +143,16 @@ const Transactions = () => {
     setStatusFilter('ALL');
     setAmountFilter('ALL');
     setAmountValue('');
+  };
+
+  const handlePreviousPage = () => {
+    if (!hasPreviousPage) return;
+    fetchTransactions(currentPage - 1);
+  };
+
+  const handleNextPage = () => {
+    if (!hasNextPage) return;
+    fetchTransactions(currentPage + 1);
   };
 
   if (loading) return (
@@ -267,7 +309,7 @@ const Transactions = () => {
         <div className="panel-header">
           <span className="panel-title">Histórico</span>
           <span style={{ fontSize: 12, color: '#999' }}>
-            {filteredTransactions.length} de {transactions.length} transações
+            {filteredTransactions.length} de {transactions.length} nesta página · total {totalElements}
           </span>
         </div>
 
@@ -320,6 +362,32 @@ const Transactions = () => {
               ))}
             </tbody>
           </table>
+        )}
+
+        {totalElements > 0 && (
+          <div className="transactions-pagination">
+            <button
+              type="button"
+              className={`pagination-arrow${hasPreviousPage ? '' : ' disabled'}`}
+              onClick={handlePreviousPage}
+              disabled={!hasPreviousPage}
+              aria-label="Página anterior"
+            >
+              ←
+            </button>
+            <span className="pagination-info">
+              Página {currentPage + 1} de {Math.max(totalPages, 1)}
+            </span>
+            <button
+              type="button"
+              className={`pagination-arrow${hasNextPage ? '' : ' disabled'}`}
+              onClick={handleNextPage}
+              disabled={!hasNextPage}
+              aria-label="Próxima página"
+            >
+              →
+            </button>
+          </div>
         )}
       </div>
     </div>

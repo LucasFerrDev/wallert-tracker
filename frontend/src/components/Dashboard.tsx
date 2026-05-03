@@ -51,6 +51,21 @@ const fmtShort = (v: number) => {
   return `R$ ${v.toFixed(0)}`;
 };
 
+const parseTransactionDate = (value: string) => {
+  if (!value) return new Date(0);
+
+  const isoDate = new Date(value);
+  if (!Number.isNaN(isoDate.getTime())) return isoDate;
+
+  const brMatch = value.match(/^(\d{2})\/(\d{2})\/(\d{4})$/);
+  if (brMatch) {
+    const [, day, month, year] = brMatch;
+    return new Date(Number(year), Number(month) - 1, Number(day));
+  }
+
+  return new Date(0);
+};
+
 // ── Custom bar chart tooltip ───────────────────────────────────────
 const BarTooltip = ({ active, payload, label }: any) => {
   if (active && payload?.length) {
@@ -109,7 +124,7 @@ const Dashboard = () => {
   const currentYear = now.getFullYear();
 
   const thisMonthTxs = transactions.filter(tx => {
-    const d = new Date(tx.date);
+    const d = parseTransactionDate(tx.date);
     return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
   });
 
@@ -140,7 +155,7 @@ const Dashboard = () => {
     const incMap: Record<string, number> = {};
     const expMap: Record<string, number> = {};
     transactions.forEach(tx => {
-      const d = new Date(tx.date);
+      const d = parseTransactionDate(tx.date);
       const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
       if (tx.type === 'INCOME') {
         incMap[key] = (incMap[key] || 0) + tx.amount;
@@ -177,7 +192,11 @@ const Dashboard = () => {
 
   // ── Recent transactions (last 5) ────────────────────────────────
   const recentTxs = [...transactions]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .sort((a, b) => {
+      const dateDiff = parseTransactionDate(b.date).getTime() - parseTransactionDate(a.date).getTime();
+      if (dateDiff !== 0) return dateDiff;
+      return (b.id ?? 0) - (a.id ?? 0);
+    })
     .slice(0, 5);
 
   // ── Current date subtitle ───────────────────────────────────────
@@ -376,10 +395,10 @@ const Dashboard = () => {
                       <div className="tx-name">{tx.description}</div>
                       <div className="tx-cat">{tx.category}</div>
                     </td>
-                    <td>{new Date(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</td>
+                    <td>{parseTransactionDate(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</td>
                     <td>
-                      <span className={`badge ${tx.type === 'INCOME' ? 'badge-green' : 'badge-orange'}`}>
-                        {tx.type === 'INCOME' ? 'Recebido' : 'Pago'}
+                      <span className={`badge ${tx.type === 'INCOME' ? 'badge-green' : 'badge-red'}`}>
+                        {tx.type === 'INCOME' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
                     <td className={tx.type === 'INCOME' ? 'tx-amount-income' : 'tx-amount-expense'}>

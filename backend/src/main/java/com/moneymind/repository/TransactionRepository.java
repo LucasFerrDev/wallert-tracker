@@ -3,6 +3,8 @@ package com.moneymind.repository;
 import com.moneymind.model.Transaction;
 import com.moneymind.model.TransactionType;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
@@ -22,6 +24,7 @@ public interface TransactionRepository extends JpaRepository<Transaction, Long> 
     List<Object[]> sumAmountByCategoryAndDateBetween(User user, LocalDate startDate, LocalDate endDate);
     
     List<Transaction> findByUser(User user);
+    Page<Transaction> findByUser(User user, Pageable pageable);
 
     Optional<Transaction> findByIdAndUser(Long id, User user);
 }

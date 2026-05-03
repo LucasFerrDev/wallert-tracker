@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CurrencyInput from './CurrencyInput';
 import api from '../services/api';
+import axios from 'axios';
 
 interface Goal {
   id?: number;
@@ -14,6 +15,7 @@ const Goals = () => {
   const [goals, setGoals] = useState<Goal[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [editingId, setEditingId] = useState<number | null>(null);
 
   const [name, setName] = useState('');
   const [targetAmount, setTargetAmount] = useState(0);
@@ -29,11 +31,61 @@ const Goals = () => {
       .catch(() => { setError('Não foi possível carregar suas metas.'); setLoading(false); });
   };
 
-  const handleAddGoal = (e: React.FormEvent) => {
+  const resetForm = () => {
+    setName('');
+    setTargetAmount(0);
+    setCurrentAmount(0);
+    setDeadline('');
+    setEditingId(null);
+  };
+
+  const handleSubmitGoal = (e: React.FormEvent) => {
     e.preventDefault();
-    api.post('/api/goals', { name, targetAmount, currentAmount, deadline })
-      .then(() => { fetchGoals(); setName(''); setTargetAmount(0); setCurrentAmount(0); setDeadline(''); setError(''); })
-      .catch(() => setError('Não foi possível salvar a meta.'));
+    const payload = { name, targetAmount, currentAmount, deadline };
+    const request = editingId
+      ? api.put(`/api/goals/${editingId}`, payload)
+      : api.post('/api/goals', payload);
+
+    request
+      .then(() => { fetchGoals(); resetForm(); setError(''); })
+      .catch((err) => {
+        const serverMessage = axios.isAxiosError(err) ? err.response?.data : null;
+        setError(typeof serverMessage === 'string' ? serverMessage : 'Não foi possível salvar a meta.');
+      });
+  };
+
+  const handleEditGoal = (goal: Goal) => {
+    if (!goal.id) {
+      setError('Não foi possível editar essa meta.');
+      return;
+    }
+
+    setName(goal.name);
+    setTargetAmount(goal.targetAmount);
+    setCurrentAmount(goal.currentAmount);
+    setDeadline(goal.deadline?.split('T')[0] ?? '');
+    setEditingId(goal.id);
+    setError('');
+  };
+
+  const handleDeleteGoal = (id?: number) => {
+    if (!id) {
+      setError('Não foi possível excluir essa meta.');
+      return;
+    }
+
+    if (!window.confirm('Deseja realmente excluir esta meta?')) return;
+
+    api.delete(`/api/goals/${id}`)
+      .then(() => {
+        if (editingId === id) resetForm();
+        fetchGoals();
+        setError('');
+      })
+      .catch((err) => {
+        const serverMessage = axios.isAxiosError(err) ? err.response?.data : null;
+        setError(typeof serverMessage === 'string' ? serverMessage : 'Não foi possível excluir a meta.');
+      });
   };
 
   const fmt = (v: number) =>
@@ -100,6 +152,11 @@ const Goals = () => {
                     {progress >= 100 ? '🎉 Concluído!' : `Faltam ${fmt(goal.targetAmount - goal.currentAmount)}`}
                   </span>
                 </div>
+
+                <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                  <button className="btn-edit" onClick={() => handleEditGoal(goal)}>Atualizar</button>
+                  <button className="btn-danger" onClick={() => handleDeleteGoal(goal.id)}>Excluir</button>
+                </div>
               </div>
             );
           })}
@@ -109,10 +166,15 @@ const Goals = () => {
       {/* Create goal form */}
       <div className="panel">
         <div className="panel-header">
-          <span className="panel-title">Criar Nova Meta</span>
+          <span className="panel-title">{editingId ? 'Atualizar Meta' : 'Criar Nova Meta'}</span>
+          {editingId && (
+            <button className="btn-ghost" onClick={resetForm} style={{ fontSize: 12, padding: '5px 12px' }}>
+              Cancelar
+            </button>
+          )}
         </div>
 
-        <form onSubmit={handleAddGoal}
+        <form onSubmit={handleSubmitGoal}
           style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 12 }}>
 
           <div className="form-group">
@@ -143,7 +205,7 @@ const Goals = () => {
 
           <div className="form-group" style={{ justifyContent: 'flex-end' }}>
             <button type="submit" className="btn-orange" style={{ width: '100%', marginTop: 'auto' }}>
-              Criar Meta
+              {editingId ? 'Salvar Atualização' : 'Criar Meta'}
             </button>
           </div>
         </form>

@@ -7,6 +7,9 @@ import com.moneymind.repository.TransactionRepository;
 import com.moneymind.repository.UserRepository;
 import com.moneymind.service.ForecastService;
 import com.moneymind.service.InsightService;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -42,6 +45,34 @@ public class AppController {
     @GetMapping("/transactions")
     public List<Transaction> getAllTransactions(Authentication authentication) {
         return transactionRepository.findByUser(getAuthenticatedUser(authentication));
+    }
+
+    @GetMapping("/transactions/paged")
+    public ResponseEntity<Map<String, Object>> getTransactionsPaged(
+            Authentication authentication,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "25") int size
+    ) {
+        User user = getAuthenticatedUser(authentication);
+        int safePage = Math.max(page, 0);
+        int safeSize = Math.max(size, 1);
+
+        PageRequest pageable = PageRequest.of(
+                safePage,
+                safeSize,
+                Sort.by(Sort.Order.desc("date"), Sort.Order.desc("id"))
+        );
+
+        Page<Transaction> txPage = transactionRepository.findByUser(user, pageable);
+        Map<String, Object> response = new HashMap<>();
+        response.put("content", txPage.getContent());
+        response.put("page", txPage.getNumber());
+        response.put("size", txPage.getSize());
+        response.put("totalElements", txPage.getTotalElements());
+        response.put("totalPages", txPage.getTotalPages());
+        response.put("hasNext", txPage.hasNext());
+        response.put("hasPrevious", txPage.hasPrevious());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/transactions")
