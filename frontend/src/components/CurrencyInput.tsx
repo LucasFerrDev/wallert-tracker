@@ -1,7 +1,7 @@
 import React, { useRef } from 'react';
 
 interface CurrencyInputProps {
-  value: number; // value in reais (e.g. 1200.50)
+  value: number;
   onChange: (value: number) => void;
   placeholder?: string;
   required?: boolean;
@@ -22,7 +22,6 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Format a float to Brazilian currency string (no R$ symbol)
   const formatDisplay = (val: number): string => {
     if (val === 0) return '';
     return val.toLocaleString('pt-BR', {
@@ -32,38 +31,30 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    // Strip everything that's not a digit
     const digits = e.target.value.replace(/\D/g, '');
-    if (digits === '') {
-      onChange(0);
-      return;
-    }
-    // Treat the digits as cents: last 2 are decimal places
+    if (digits === '') { onChange(0); return; }
     const cents = parseInt(digits, 10);
-    const reais = cents / 100;
-    onChange(reais);
+    onChange(cents / 100);
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    // Allow: Backspace, Delete, Tab, Escape, arrows, home, end
     const allowed = ['Backspace', 'Delete', 'Tab', 'Escape', 'ArrowLeft', 'ArrowRight', 'Home', 'End'];
     if (allowed.includes(e.key)) return;
-    // Block anything that's not a digit
-    if (!/^\d$/.test(e.key)) {
-      e.preventDefault();
-    }
+    if (!/^\d$/.test(e.key)) e.preventDefault();
   };
 
   const baseStyle: React.CSSProperties = {
     width: '100%',
-    padding: '0.875rem 0.875rem 0.875rem 2.5rem',
+    padding: '9px 12px 9px 2.25rem',
     borderRadius: '8px',
-    border: '1px solid rgba(255,255,255,0.1)',
-    background: 'rgba(0,0,0,0.2)',
-    color: 'white',
-    fontSize: '1.125rem',
+    border: '1px solid #EDEDED',
+    background: '#ffffff',
+    color: '#1a1a1a',
+    fontSize: '13px',
+    fontFamily: 'inherit',
     outline: 'none',
     boxSizing: 'border-box',
+    transition: 'border-color 0.2s, box-shadow 0.2s',
     ...style,
   };
 
@@ -75,6 +66,14 @@ const CurrencyInput: React.FC<CurrencyInputProps> = ({
       value={formatDisplay(value)}
       onChange={handleChange}
       onKeyDown={handleKeyDown}
+      onFocus={e => {
+        e.target.style.borderColor = '#F97316';
+        e.target.style.boxShadow = '0 0 0 3px rgba(249,115,22,0.12)';
+      }}
+      onBlur={e => {
+        e.target.style.borderColor = '#EDEDED';
+        e.target.style.boxShadow = 'none';
+      }}
       placeholder={placeholder}
       required={required}
       style={baseStyle}
