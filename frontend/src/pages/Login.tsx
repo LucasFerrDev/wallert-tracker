@@ -3,7 +3,7 @@ import { useAuth } from '../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
 import api from '../services/api';
 
-// Money Mind logo icon (same as sidebar)
+// Wallert Tracker logo icon (same as sidebar)
 const LogoIcon = () => (
   <svg width="22" height="22" viewBox="0 0 16 16" fill="none">
     <path d="M3 12 L8 4 L13 12" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -46,7 +46,7 @@ const Login = () => {
         </div>
 
         <h2 style={{ textAlign: 'center', marginBottom: 6, fontSize: 20, fontWeight: 700, color: '#1a1a1a', letterSpacing: '-0.02em' }}>
-          Entrar no Money Mind
+          Entrar no Wallert Tracker
         </h2>
         <p style={{ textAlign: 'center', color: '#999', fontSize: 13, marginBottom: 24 }}>
           Bem-vindo de volta! Acesse sua conta

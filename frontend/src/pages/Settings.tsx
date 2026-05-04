@@ -129,7 +129,7 @@ const Settings = () => {
 
             {isFirstAccess ? (
               <>
-                <h1 style={{ fontSize: 22, marginBottom: 6, color: '#1a1a1a' }}>Bem-vindo ao Money Mind!</h1>
+                <h1 style={{ fontSize: 22, marginBottom: 6, color: '#1a1a1a' }}>Bem-vindo ao Wallert Tracker!</h1>
                 <p style={{ color: '#999', fontSize: 14 }}>
                   Vamos configurar seu perfil financeiro para começar.
                 </p>

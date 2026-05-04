@@ -101,7 +101,7 @@ const IconLogout = () => (
   </svg>
 );
 
-// ─── Money Mind Logo SVG ─────────────────────────────────────────────
+// ─── Wallert Tracker Logo SVG ────────────────────────────────────────
 const LogoIcon = () => (
   <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
     <path d="M3 12 L8 4 L13 12" stroke="#fff" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/>
@@ -164,7 +164,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
           <div className="sidebar-logo-icon">
             <LogoIcon />
           </div>
-          <span className="sidebar-logo-name">Money Mind</span>
+          <span className="sidebar-logo-name">Wallert Tracker</span>
         </div>
         <button
           type="button"
@@ -231,7 +231,7 @@ const AppLayout = ({ children }: { children: React.ReactNode }) => {
             <div className="sidebar-logo-icon">
               <LogoIcon />
             </div>
-            <span className="sidebar-logo-name">Money Mind</span>
+            <span className="sidebar-logo-name">Wallert Tracker</span>
           </div>
         </div>
 
