@@ -233,7 +233,7 @@ const Dashboard = () => {
           <div className="topbar-title">Visão geral</div>
           <div className="topbar-sub">{dateStr} · atualizado agora</div>
         </div>
-        <button className="btn-orange" onClick={() => navigate('/transacoes')}>
+        <button className="btn-orange dashboard-topbar-btn" onClick={() => navigate('/transacoes')}>
           <svg width="13" height="13" viewBox="0 0 13 13" fill="none">
             <path d="M6.5 1v11M1 6.5h11" stroke="#fff" strokeWidth="1.6" strokeLinecap="round"/>
           </svg>
@@ -242,16 +242,16 @@ const Dashboard = () => {
       </div>
 
       {/* ── Metric Cards ────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 14, marginBottom: 20 }}>
+      <div className="dashboard-metrics-grid">
         {/* Saldo */}
-        <div className="card card-accent-top">
+        <div className="card card-accent-top metric-card-saldo">
           <div className="metric-label">Saldo total</div>
           <div className="metric-value">{fmt(summary?.currentBalance ?? 0)}</div>
           <div className="metric-delta">Saldo acumulado</div>
         </div>
 
         {/* Receitas */}
-        <div className="card">
+        <div className="card metric-card-receitas">
           <div className="metric-label">Receitas</div>
           <div className="metric-value orange">{fmt(incomeThisMonth)}</div>
           <div className="metric-delta up" style={{ display: 'flex', gap: 4 }}>
@@ -260,7 +260,7 @@ const Dashboard = () => {
         </div>
 
         {/* Despesas */}
-        <div className="card">
+        <div className="card metric-card-despesas">
           <div className="metric-label">Despesas</div>
           <div className="metric-value red">{fmt(expenseThisMonth)}</div>
           <div className="metric-delta down" style={{ display: 'flex', gap: 4 }}>
@@ -269,7 +269,7 @@ const Dashboard = () => {
         </div>
 
         {/* Economias */}
-        <div className="card">
+        <div className="card metric-card-economias">
           <div className="metric-label">Economias</div>
           <div className="metric-value" style={{ color: savings >= 0 ? '#1a1a1a' : '#dc2626' }}>
             {fmt(savings)}
@@ -281,7 +281,7 @@ const Dashboard = () => {
       </div>
 
       {/* ── Charts Row ──────────────────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 14, marginBottom: 14 }}>
+      <div className="dashboard-charts-grid">
 
         {/* Bar chart */}
         <div className="panel">
@@ -293,10 +293,17 @@ const Dashboard = () => {
           {barData.length > 0 ? (
             <>
               <ResponsiveContainer width="100%" height={140}>
-                <BarChart data={barData} barCategoryGap="30%" barGap={2} margin={{ top: 4, right: 4, left: -20, bottom: 0 }}>
+                <BarChart data={barData} barCategoryGap="30%" barGap={2} margin={{ top: 4, right: 12, left: 0, bottom: 0 }}>
                   <CartesianGrid strokeDasharray="3 3" stroke="#F5F5F5" vertical={false}/>
                   <XAxis dataKey="month" tick={{ fill: '#bbb', fontSize: 10 }} axisLine={false} tickLine={false}/>
-                  <YAxis tick={{ fill: '#bbb', fontSize: 10 }} axisLine={false} tickLine={false} tickFormatter={fmtShort}/>
+                  <YAxis
+                    width={62}
+                    tickMargin={8}
+                    tick={{ fill: '#bbb', fontSize: 10 }}
+                    axisLine={false}
+                    tickLine={false}
+                    tickFormatter={fmtShort}
+                  />
                   <Tooltip content={<BarTooltip />} cursor={{ fill: 'rgba(249,115,22,0.04)' }}/>
                   <Bar dataKey="income" fill="#F97316" radius={[4, 4, 0, 0]} maxBarSize={14}/>
                   <Bar dataKey="expense" fill="#FED7AA" radius={[4, 4, 0, 0]} maxBarSize={14}/>
@@ -367,7 +374,7 @@ const Dashboard = () => {
       </div>
 
       {/* ── Transactions + Goals Row ─────────────────────────────── */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1.6fr 1fr', gap: 14 }}>
+      <div className="dashboard-bottom-grid">
 
         {/* Recent transactions */}
         <div className="panel">
@@ -379,7 +386,7 @@ const Dashboard = () => {
           {recentTxs.length === 0 ? (
             <p style={{ fontSize: 13, color: '#bbb' }}>Nenhuma transação registrada.</p>
           ) : (
-            <table className="tx-table">
+            <table className="tx-table tx-table-dashboard">
               <thead>
                 <tr>
                   <th>Descrição</th>
@@ -391,17 +398,17 @@ const Dashboard = () => {
               <tbody>
                 {recentTxs.map(tx => (
                   <tr key={tx.id ?? `${tx.description}-${tx.date}`}>
-                    <td>
+                    <td data-label="Descrição">
                       <div className="tx-name">{tx.description}</div>
                       <div className="tx-cat">{tx.category}</div>
                     </td>
-                    <td>{parseTransactionDate(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</td>
-                    <td>
+                    <td data-label="Data">{parseTransactionDate(tx.date).toLocaleDateString('pt-BR', { day: '2-digit', month: 'short' })}</td>
+                    <td data-label="Status">
                       <span className={`badge ${tx.type === 'INCOME' ? 'badge-green' : 'badge-red'}`}>
                         {tx.type === 'INCOME' ? 'Receita' : 'Despesa'}
                       </span>
                     </td>
-                    <td className={tx.type === 'INCOME' ? 'tx-amount-income' : 'tx-amount-expense'}>
+                    <td data-label="Valor" className={tx.type === 'INCOME' ? 'tx-amount-income' : 'tx-amount-expense'}>
                       {tx.type === 'INCOME' ? '+' : '−'}{fmt(tx.amount)}
                     </td>
                   </tr>

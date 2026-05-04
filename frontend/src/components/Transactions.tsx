@@ -354,8 +354,22 @@ const Transactions = () => {
                   </td>
                   <td data-label="Ações" style={{ textAlign: 'right' }}>
                     <div className="tx-actions">
-                      <button className="btn-edit" onClick={() => handleEditTransaction(tx)}>Editar</button>
-                      <button className="btn-danger" onClick={() => handleDeleteTransaction(tx.id)}>Excluir</button>
+                      <button
+                        className="btn-edit"
+                        onClick={() => handleEditTransaction(tx)}
+                        aria-label="Editar transação"
+                        title="Editar transação"
+                      >
+                        <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                      </button>
+                      <button
+                        className="btn-danger"
+                        onClick={() => handleDeleteTransaction(tx.id)}
+                        aria-label="Excluir transação"
+                        title="Excluir transação"
+                      >
+                        <i className="bi bi-trash3-fill" aria-hidden="true"></i>
+                      </button>
                     </div>
                   </td>
                 </tr>

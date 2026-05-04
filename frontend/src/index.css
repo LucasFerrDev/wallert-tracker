@@ -215,6 +215,24 @@ body {
   border-top: 2px solid var(--accent);
 }
 
+.dashboard-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin-bottom: 20px;
+}
+
+.dashboard-charts-grid,
+.dashboard-bottom-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.6fr) minmax(0, 1fr);
+  gap: 14px;
+}
+
+.dashboard-charts-grid {
+  margin-bottom: 14px;
+}
+
 .panel {
   background: var(--bg-card);
   border-radius: 12px;
@@ -266,6 +284,7 @@ body {
   color: var(--text-primary);
   letter-spacing: -0.02em;
   line-height: 1.2;
+  overflow-wrap: anywhere;
 }
 
 .metric-value.orange { color: var(--accent); }
@@ -361,37 +380,51 @@ body {
 }
 
 .btn-danger {
-  background: rgba(220,38,38,0.08);
+  background: transparent;
   color: var(--danger);
-  border: 1px solid rgba(220,38,38,0.25);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  border: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 0;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .btn-danger:hover {
-  background: rgba(220,38,38,0.15);
+  opacity: 0.75;
 }
 
 .btn-edit {
-  background: rgba(249,115,22,0.08);
+  background: transparent;
   color: var(--accent);
-  border: 1px solid rgba(249,115,22,0.25);
-  padding: 6px 12px;
-  border-radius: 6px;
-  font-size: 12px;
-  font-weight: 500;
+  border: none;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border-radius: 0;
   cursor: pointer;
   font-family: inherit;
-  transition: background 0.15s;
+  transition: opacity 0.15s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
 }
 
 .btn-edit:hover {
-  background: rgba(249,115,22,0.15);
+  opacity: 0.75;
+}
+
+.btn-edit i,
+.btn-danger i {
+  font-size: 16px;
+  line-height: 1;
 }
 
 /* ── Badges ─────────────────────────────────────────────── */
@@ -653,6 +686,7 @@ select option {
   align-items: center;
   justify-content: center;
   gap: 20px;
+  flex-wrap: wrap;
 }
 
 .donut-labels {
@@ -1145,6 +1179,127 @@ h3 { font-size: 0.9375rem; }
     padding: 14px;
   }
 
+  .topbar {
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .dashboard-topbar-btn {
+    width: 100%;
+    min-height: 40px;
+  }
+
+  .dashboard-metrics-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+    margin-bottom: 14px;
+  }
+
+  .metric-card-saldo {
+    order: 1;
+  }
+
+  .metric-card-receitas {
+    order: 2;
+  }
+
+  .metric-card-economias {
+    order: 3;
+  }
+
+  .metric-card-despesas {
+    order: 4;
+  }
+
+  .dashboard-charts-grid,
+  .dashboard-bottom-grid {
+    grid-template-columns: 1fr;
+    gap: 10px;
+  }
+
+  .panel,
+  .card {
+    padding: 14px;
+    min-width: 0;
+  }
+
+  .panel-header {
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .chart-legend {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .donut-label {
+    font-size: 11px;
+  }
+
+  .metric-value {
+    font-size: 18px;
+  }
+
+  .progress-meta {
+    gap: 8px;
+    align-items: baseline;
+  }
+
+  .progress-vals {
+    text-align: right;
+    overflow-wrap: anywhere;
+  }
+
+  .tx-table-dashboard thead {
+    display: none;
+  }
+
+  .tx-table-dashboard,
+  .tx-table-dashboard tbody,
+  .tx-table-dashboard tr,
+  .tx-table-dashboard td {
+    display: block;
+    width: 100%;
+  }
+
+  .tx-table-dashboard tr {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 10px 12px;
+    margin-bottom: 10px;
+    background: #fff;
+  }
+
+  .tx-table-dashboard td {
+    border-top: none;
+    padding: 6px 0;
+    text-align: left !important;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    font-size: 12px;
+  }
+
+  .tx-table-dashboard td::before {
+    content: attr(data-label);
+    color: var(--text-muted);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+    min-width: 76px;
+    padding-top: 2px;
+  }
+
+  .tx-table-dashboard .tx-name {
+    text-align: right;
+    word-break: break-word;
+  }
+
   .transactions-filters-grid {
     grid-template-columns: 1fr;
   }
@@ -1218,6 +1373,17 @@ h3 { font-size: 0.9375rem; }
 
   .tx-table-history .btn-edit,
   .tx-table-history .btn-danger {
-    min-width: 84px;
+    width: 34px;
+    height: 34px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dashboard-metrics-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .topbar-sub {
+    overflow-wrap: anywhere;
   }
 }

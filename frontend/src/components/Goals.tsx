@@ -154,8 +154,22 @@ const Goals = () => {
                 </div>
 
                 <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-                  <button className="btn-edit" onClick={() => handleEditGoal(goal)}>Atualizar</button>
-                  <button className="btn-danger" onClick={() => handleDeleteGoal(goal.id)}>Excluir</button>
+                  <button
+                    className="btn-edit"
+                    onClick={() => handleEditGoal(goal)}
+                    aria-label="Editar meta"
+                    title="Editar meta"
+                  >
+                    <i className="bi bi-pencil-square" aria-hidden="true"></i>
+                  </button>
+                  <button
+                    className="btn-danger"
+                    onClick={() => handleDeleteGoal(goal.id)}
+                    aria-label="Excluir meta"
+                    title="Excluir meta"
+                  >
+                    <i className="bi bi-trash3-fill" aria-hidden="true"></i>
+                  </button>
                 </div>
               </div>
             );
