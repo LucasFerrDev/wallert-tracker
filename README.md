@@ -1,12 +1,12 @@
-# MoneyMind
+# Wallert Tracker
 
-O **MoneyMind** é uma aplicação de controle financeiro pessoal para gerenciamento de **receitas, despesas e metas**, com autenticação por usuário e dashboard com visão consolidada dos dados.
+O **Wallert Tracker** é uma aplicação de controle financeiro pessoal para gerenciamento de **receitas, despesas e metas**, com autenticação por usuário e dashboard com visão consolidada dos dados.
 
-![Dashboard do MoneyMind](images/dash.png)
+![Dashboard do Wallert Tracker](images/dash.png)
 
 ## Índice
 
-- [MoneyMind](#moneymind)
+- [Wallert Tracker](#wallert-tracker)
   - [Índice](#índice)
   - [1. Sobre a aplicação](#1-sobre-a-aplicação)
     - [Tela de Metas](#tela-de-metas)
@@ -29,7 +29,7 @@ O **MoneyMind** é uma aplicação de controle financeiro pessoal para gerenciam
 
 ## 1. Sobre a aplicação
 
-O MoneyMind foi desenvolvido para ajudar no acompanhamento da vida financeira por usuário, com foco em organização, previsibilidade e evolução contínua dos hábitos financeiros.
+O Wallert Tracker foi desenvolvido para ajudar no acompanhamento da vida financeira por usuário, com foco em organização, previsibilidade e evolução contínua dos hábitos financeiros.
 
 Na aplicação, o usuário encontra uma experiência dividida por telas principais:
 
@@ -81,7 +81,7 @@ Cada conta possui dados isolados, garantindo que transações e configurações 
 O projeto está organizado em dois módulos principais:
 
 ```text
-money-mind/
+wallert-tracker/
 ├── backend/      # API REST (Spring Boot)
 ├── frontend/     # SPA (React + Vite + TypeScript)
 └── docker-compose.yml  # PostgreSQL
