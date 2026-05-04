@@ -16,3 +16,9 @@ add_missing_columns.sql
 .idea/
 .vscode/
 *.DS_Store
+
+
+# ─── docker ───────────────────────────────────────────────────
+
+.docker-compose.yml/
+docker-compose.yml
